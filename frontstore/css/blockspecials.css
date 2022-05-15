@@ -1,0 +1,37 @@
+/**
+ * Web Application Prefix Apply For Making Owner Styles
+ */
+/**
+ *   Blocks Layout Selectors 
+ */
+/**
+ * Product Item Selectors
+ */
+/***********************************************************************/
+/**
+* Transition-timing-function property@mixin 
+*/
+/*background RGBA
+============================================*/
+/****/
+/* RIGHT TO LEFT */
+/** CHECKOUT BY STEP */
+/*  
+ * LAYOUT VARIABLES 
+ */
+#best-sellers_block_right .title_block {
+  position: relative;
+}
+#best-sellers_block_right .title_block:before {
+  width: 42px;
+  height: 40px;
+  content: "";
+  position: absolute;
+  top: 0px;
+  right: 0;
+  background: url(img/sale.png) center no-repeat;
+}
+.rtl #best-sellers_block_right .title_block:before {
+  left: 0;
+  right: auto;
+}

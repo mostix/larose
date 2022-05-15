@@ -1,0 +1,42 @@
+/**
+ * Web Application Prefix Apply For Making Owner Styles
+ */
+/**
+ *   Blocks Layout Selectors 
+ */
+/**
+ * Product Item Selectors
+ */
+/***********************************************************************/
+/**
+* Transition-timing-function property@mixin 
+*/
+/*background RGBA
+============================================*/
+/****/
+/* RIGHT TO LEFT */
+/** CHECKOUT BY STEP */
+/*  
+ * LAYOUT VARIABLES 
+ */
+.leo-megamenu {
+  position: relative;
+}
+.leo-megamenu:before {
+  content: "";
+  width: 10px;
+  height: 100%;
+  background-color: #efefef;
+  position: absolute;
+  left: 0;
+}
+.rtl .leo-megamenu:before {
+  right: 0;
+  left: auto;
+}
+.leo-megamenu > li {
+  float: left;
+}
+.rtl .leo-megamenu > li {
+  float: right;
+}

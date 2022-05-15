@@ -1,0 +1,128 @@
+/**
+ * Web Application Prefix Apply For Making Owner Styles
+ */
+/**
+ *   Blocks Layout Selectors 
+ */
+/**
+ * Product Item Selectors
+ */
+/***********************************************************************/
+/**
+* Transition-timing-function property@mixin 
+*/
+/*background RGBA
+============================================*/
+/****/
+/* RIGHT TO LEFT */
+/** CHECKOUT BY STEP */
+/*  
+ * LAYOUT VARIABLES 
+ */
+.carousel-control {
+  z-index: 99;
+  top: -25px;
+}
+
+.carousel-control.left,
+.carousel-control.right {
+  background: none;
+}
+
+.custom_slide a:first-child img {
+  margin-bottom: 20px;
+}
+
+.block_content .contact-us li {
+  line-height: 35px;
+}
+.block_content .contact-us li em {
+  background: #4A4A4A;
+  border-radius: 2px;
+  color: #D4D4D4;
+  display: inline-block;
+  font-size: 18px;
+  margin-right: 10px;
+  text-align: center;
+  width: 28px;
+  padding: 3px 0 3px 4px;
+}
+.rtl .block_content .contact-us li em {
+  margin-left: 10px;
+  margin-right: inherit;
+}
+.rtl .block_content .contact-us li em {
+  padding: 3px 4px 3px 0;
+}
+.block_content .contact-us li:hover em {
+  background-color: #808181;
+  color: white;
+}
+
+.block .nav-pills > li.active > a {
+  position: relative;
+}
+.block .nav-pills > li.active > a:before {
+  content: "\f0d7";
+  position: absolute;
+  bottom: -7px;
+  height: 10px;
+  line-height: 10px;
+  right: 50%;
+  margin-right: -4px;
+  font-family: "FontAwesome";
+  color: transparent;
+  font-size: 19px;
+  z-index: 9;
+}
+.block .panel-group {
+  margin-bottom: 0;
+}
+
+.payment-method {
+  margin-top: 5px;
+}
+.payment-method li {
+  display: inline-block;
+}
+
+.about img {
+  width: 100%;
+  border: 5px solid #808181;
+  margin-bottom: 10px;
+}
+.about img:hover {
+  border-color: #71c2d9;
+  -webkit-transition: all 0.5s ease 0s;
+  transition: all 0.5s ease 0s;
+}
+
+.widget-images .images-list .row {
+  margin: 0 -1px;
+}
+.widget-images .images-list .image-item {
+  padding: 1px;
+  background-color: #cccccc;
+  border: 1px solid white;
+}
+
+.adv_home {
+  padding: 0;
+}
+.adv_home .block_content {
+  padding: 0;
+}
+
+.customhtml .title_block_gt {
+  font-family: "Oswald";
+  font-size: 14px;
+  text-transform: uppercase;
+  font-weight: normal;
+}
+.customhtml .block_content_ct img {
+  width: 100%;
+}
+
+.icon-title-experiences .page-subheading span:before {
+  content: "\f005";
+}

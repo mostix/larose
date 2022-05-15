@@ -1,0 +1,87 @@
+<?php
+  error_reporting(E_ALL);
+  ini_set('display_errors', 'On');
+
+  include_once '../config.php';
+  include_once '../languages/languages.php';
+  include_once '../functions/include-functions.php';
+
+//  echo "<pre>";print_r($_POST);exit;
+  if(isset($_POST['friend_name'])) {
+    $friend_name =  $_POST['friend_name'];
+  }
+  if(isset($_POST['friend_email'])) {
+    $friend_email =  $_POST['friend_email'];
+  }
+  if(isset($_POST['product_id'])) {
+    $product_id =  $_POST['product_id'];
+  }
+  if(isset($_POST['product_name'])) {
+    $product_name =  $_POST['product_name'];
+  }
+  if(isset($_POST['product_url'])) {
+    $product_url =  $_POST['product_url'];
+  }
+  if(isset($_POST['product_img'])) {
+    $product_img =  $_POST['product_img'];
+    $product_img_src = "https://".$_SERVER['SERVER_NAME'].$product_img;
+  }
+  
+  if(isset($_SESSION['customer'])) {
+    $customer_firstname = $_SESSION['customer']['customer_firstname'];
+    $customer_lastname = $_SESSION['customer']['customer_lastname'];
+    $customer_email = $_SESSION['customer']['customer_email'];
+    $subject_friend = "Вашият приятел $customer_firstname $customer_lastname Ви прати линк за $product_name";
+    $headers_me = "MIME-Version:1.0;\nReply-to:Larose<$customer_email>;\nFrom:Larose<$customer_email>;\nContent-Type: text/html;charset=utf-8\n";
+  }
+  else {
+    $subject_friend = "Ваш приятел Ви изпрати линк за $product_name";
+    $headers_me = "MIME-Version:1.0;\nReply-to:Larose<larose@larose.bg>;\nFrom:Larose<larose@larose.bg>;\nContent-Type: text/html;charset=utf-8\n";
+  }
+  
+  $to_me = "monywhy@gmail.com";
+  $to_friend = $friend_email;
+
+  $subject_me = $subject_friend;
+
+  $message_me = "";
+  $message_friend = "";
+
+  $message_1 = "<table cellpadding='10' cellspacing='2' border='0' width='1000' align='center' style='margin:0 auto;'>";
+  $message_me .= $message_1;
+  $message_friend .= $message_1;
+  $logo_image = "https://".$_SERVER['SERVER_NAME']."/frontstore/images/logo.png";
+  //$logo_image_params = getimagesize($logo_image);
+  //$logo_image_dimensions = $logo_image_params[3];
+
+  $message_2 = "<tr>
+                  <td colspan='6' height='180' align='center'>
+                    <a href='https://".$_SERVER['SERVER_NAME']."' target='_blank'><img src='$logo_image'></a>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan='6' height='20' align='center'>
+                    <font style='text-transform:uppercase;color:#333;font-size: 12pt'>
+                      Здравей, $friend_name,<br><br>
+                      Вашият приятел $customer_firstname $customer_lastname Ви прати линк за $product_name
+                    </font>
+                  </td>
+                </tr>
+                <tr><td colspan='6' height='30'></td></tr>
+                <tr><td colspan='6' height='30' align='center'>
+                  <a href='https://".$_SERVER['SERVER_NAME']."$product_url'><img src='$product_img_src'></a>
+                </td></tr>";
+
+  $message_me .= $message_2;
+  $message_friend .= $message_2;
+  
+  $headers_friend = $headers_me;
+
+  if(mail($to_me, $subject_me, $message_me, $headers_me) && mail($to_friend, $subject_friend, $message_friend, $headers_friend)) {
+    //echo $all_queries;mysqli_query($db_link, "ROLLBACK");
+    
+  }
+  else {
+   
+  }
+?>
