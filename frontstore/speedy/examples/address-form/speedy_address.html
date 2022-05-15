@@ -1,0 +1,753 @@
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <title>Demo Speedy Address Form</title>
+
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+  <script src="http://code.jquery.com/jquery-1.10.1.js"></script>
+  <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+  <script src="chosen/chosen.jquery.js" type="text/javascript"></script>
+ 	
+  <link rel="stylesheet"	href="chosen/chosen.css">
+  <link rel="stylesheet" href="speedy_address.css">
+  <script src="speedy_address.js"></script>
+  <style>
+
+  	body {
+  		background-color: #FACF00;
+  	}
+  	
+  	.formButton {
+  	}
+  	
+		.fullInput {
+			width:100%;
+		}
+  </style>
+  
+  <script>
+  	
+  	try {
+    	window.addEventListener('pagehide', PageHideHandler, false);
+		} catch (e) { }
+	
+		//Fires when a page is unloaded:
+		function PageHideHandler() {
+		    //re-enable disabled submit buttons:
+		    $(".formButton").attr("disabled", false);
+		}
+	  	
+	$(function() {
+          $( "#loginButton" ).button().click(function( event ) {
+            event.preventDefault();
+            $.ajax({
+            type: "POST",
+            async: "false",
+            url: "speedy_address_soap.php",
+            timeout : 5000,
+            dataType: "json",
+            data: {
+                    method: "login",
+                    username: $("#username").val(),
+                    password: $("#password").val()
+            },
+            error: function() {
+                    $("#loginMessage").text("Timeout or communication error on logon");
+            },
+            success: function( data ) {
+                    json = eval(data);
+                    if (json.status == 0) {
+                            enableAndClearAddressForm();
+                            disableLoginForm();
+                            $("#loginMessage").text("EPS account verified");
+
+                            $.ajax({
+                                type: "POST",
+                                url: "speedy_address_soap.php",
+                                timeout : 5000,
+                                dataType: "json",
+                                async: "false",
+                                data: {
+                                        username: $("#username").val(),
+                                        password: $("#password").val(),
+                                        method: "listQuarterTypes"
+                                },
+                                success: function( data ) {
+                                        json = eval(data);
+                                        if (json.status != 0) {
+                                                $("#message").text(json.message);
+                                                disableAndClearAddressForm();
+                                                enableLoginForm();
+                                        } else {
+                                                $("#quarterType").html('');
+                                                $("#quarterType").append('<option value="' + DEFAULT_QUARTER_TYPE + '">' + DEFAULT_QUARTER_TYPE + '</option>');
+                                                $(json.result).each(function(){
+                                                        $("#quarterType").append('<option value="' + this.name + '">' + this.name + '</option>');
+                                                });
+                                                $("#quarterType").trigger("chosen:updated");
+                                                streetTypesLoaded = true;
+                                        }
+                                },
+                                error: function() {
+                                  $("#message").text("Timeout or communication error on loadind quarter types");
+                                }
+                            });
+                        } else {
+                            $("#loginMessage").text("Unknown user or invalid password");
+                        }
+                        return true;
+                }
+            });
+          });
+  	});
+  	
+	$(function() {
+		$( "#logoffButton" ).button().click(function( event ) {
+			event.preventDefault();
+			enableLoginForm();
+			disableAndClearAddressForm();
+		});
+		
+		$("#username").blur(function() {
+			$("#loginMessage").text("");
+		});
+		
+		$("#password").blur(function() {
+			$("#loginMessage").text("");
+		});
+		
+		$("#username").on("keydown", function (e) {
+			if(e.which == 13) { // Checks for the enter key
+	        return false;
+	    }
+		});
+		
+		$("#password").on("keydown", function (e) {
+			if(e.which == 13) { // Checks for the enter key
+	        //return false;
+	        $( "#logonButton" ).click();
+	    }
+		});
+	});
+
+  	$(window).load(function(){
+  		
+  		enableLoginForm();
+ 			disableAndClearAddressForm();
+  		
+  		if ($.browser.msie != undefined && $.browser.msie != null) {
+	  		if ($.browser.msie && $.browser.version <= 9) {
+	  			$(".fullInput").css("width", "272");
+	  		}
+	  	}
+		});
+		
+		function disableLoginForm() {
+  		$("#username").attr("disabled", true);
+  		$("#password").attr("disabled", true);
+  		$("#loginButton").hide();
+  		$("#logoffButton").show();
+  	}
+  	
+  	function enableLoginForm() {
+  		$("#username").attr("disabled", false);
+  		$("#password").attr("disabled", false);
+  		$("#password").val("");
+  		$("#loginButton").show();
+  		$("#logoffButton").hide();
+  		$("#loginMessage").text("");
+  		$("#username").focus();
+  	}
+
+  		
+  	function disableAndClearAddressForm() {
+  		$("#siteName").autocomplete("disable");
+  		$("#siteName").attr("disabled", true);
+  		$("#validateButton").attr("disabled", true).addClass("ui-state-disabled");
+  		$("#clearButton").attr("disabled", true).addClass("ui-state-disabled");
+  		$("#isOfficeInput").attr("disabled", true);
+  		$("#isOffice").attr("disabled", true);
+  		officeEnabled = false;
+  		isOffice = false;
+  		setSite(null);
+  	}
+  	
+  	function enableAndClearAddressForm() {
+  		$("#siteName").autocomplete("enable");
+  		$("#siteName").attr("disabled", false);
+  		$("#validateButton").attr("disabled", false).removeClass("ui-state-disabled");
+  		$("#clearButton").attr("disabled", false).removeClass("ui-state-disabled");
+  		$("#isOfficeInput").attr("disabled", false);
+  		$("#isOffice").attr("Disabled", false);
+  		officeEnabled = true;
+  		isOffice = false;
+  		setSite(null);
+  		$("#siteName").focus();
+  	}
+  			
+  </script>
+</head>
+
+<body>
+
+	<form name="F">
+
+  	<input id="siteId" name="siteId" type="hidden"/>
+  	<input id="addrNomen" name="addrNomen" type="hidden"/>
+        <input id="quarterId" name="quarterId" type="hidden"/>
+        <input id="quarterActualName" name="quarterActualName" type="hidden"/>
+  	<input id="streetId" name="streetId" type="hidden"/>
+  	<input id="streetActualName" name="streetActualName" type="hidden"/>
+        <input id="commonObjectId" name="commonObjectId" type="hidden"/>
+        <input id="commonObjectType" name="commonObjectType" type="hidden"/>
+  	<input id="coordX" name="coordX" type="hidden"/>
+  	<input id="coordY" name="coordY" type="hidden"/>
+  	<input id="coordTypeId" name="coordTypeId" type="hidden"/>
+  	<input id="officeWorkingTimeFrom" name="оfficeWorkingTimeFrom" type="hidden"/>
+  	<input id="officeWorkingTimeTo" name="оfficeWorkingTimeTo" type="hidden"/>
+  	<input id="officeWorkingTimeHalfFrom" name="оfficeWorkingTimeFromHalf" type="hidden"/>
+  	<input id="officeWorkingTimeHalfTo" name="оfficeWorkingTimeToHalf" type="hidden"/>
+  	<input id="officeFullAddressString" name="officeFullAddressString" type="hidden"/>
+  	
+  	
+
+		
+            <div style="width:1500px; float:left">
+              <div style="width:460px;float:left">
+
+                <div style="width:100%;float:left">
+                  <div id="formLoginTitle" style="width:100%;float: left;padding:0px;margin-left:20px;margin-bottom:5px;font-family: Verdana, Tahoma, Helvetica, sans-serif;font-size:12px;font-weight:bold;">
+                          EPS потебител (EPS user credentials)
+                  </div>
+                  <div id="login" class="ui-widget ui-corner-all" style="width:376px;float: left;padding:20px 20px 10px 20px;margin-left:20px;">
+                    <div style="width:376px;margin: 3px 0 0 0;padding: 0 0 0 0;float: left;">
+                      <div style="width:100px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+                        <span class="label" style="width:98px;">Потребител</span>
+                        <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+                      </div>
+                      <div style="width:274px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+                        <input id="username" name="username" class="ui-corner-all formInput" style="width:200px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Потебителско име" tabindex="101"/>
+                      </div>
+                    </div>
+                    <div style="width:376px;margin: 3px 0 0 0;padding: 0 0 0 0;float: left;">
+                      <div style="width:100px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+                        <span class="label" style="width:98px;">Парола</span>
+                        <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+                      </div>
+                      <div style="width:274px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+                        <input id="password" name="password" class="ui-corner-all formInput" style="width:200px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" type="password" title="Парола" tabindex="102"/>
+                      </div>
+                    </div>
+
+                    <div style="width:376px;height:2px;margin: 10px 0 10px 0;padding: 0 0 0 0;border:none;float:left;background-color:blue;">
+                            &nbsp;
+                    </div>
+                    <div style="width:376px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+                      <span style="width:226px;height:38px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+                      <input id="loginButton" name="loginButton" class="ui-corner-all formButton" type="submit" value="Вход" style="width:150px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Вход" tabindex="103">
+                      <input id="logoffButton"  name="logoffButton" class="ui-corner-all formButton" type="submit" value="Изход" style="width:150px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;display:none" title="Изход" tabindex="104">
+                    </div>
+                    <div style="width:376px; margin: 3px 0 0 0;padding: 0 0 0 0;float: left">
+                      <span id="loginMessage" style="width:100%;height:18px;font-weight:bold;color:red;float:left;"></span>
+                    </div>
+                  </div>
+                </div>
+
+
+                <div style="width:460px;float:left">
+				
+                    <div id="formTitle" style="width:100%;float: left;padding:0px;margin-left:20px;margin-top:20px;margin-bottom:5px;font-family: Verdana, Tahoma, Helvetica, sans-serif;font-size:12px;font-weight:bold;">
+                                    Адресна форма на Спиди (Speedy Address Form)
+                    </div>
+			  
+                    <div id="speedy_address" class="ui-widget ui-corner-all" style="width:376px;float: left;padding:20px 20px 10px 20px;margin-left:20px;">
+                      <div style="width:376px;margin: 3px 0 0 0;padding: 0 0 0 0;float: left;">
+	        	<div style="width:100px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+                          <span class="label" style="width:98px;">Нас. място</span>
+                          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+	        	</div>
+	        	<div style="width:274px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+		        	<input id="siteType" name="siteType" class="ui-corner-all formInput" style="width:31px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Тип на населеното място" disabled="true" tabindex="201"/>
+		        	<span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0;float: left;">&nbsp;</span>
+		        	<input id="siteName" name="siteName" class="ui-corner-all formInput" style="width:177px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Населеното място" tabindex="202">
+		        	<div style="width:60px;margin: 0 0 0 0;padding: 0 0 0 0; float: right">
+			        	<span class="label" style="width:25px;height:18px;">п.к.</span>
+			        	<input id="postCode" name="postCode" class="ui-corner-all formInput" style="width:33px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: right;" title="Пощенски код" disabled="true" tabindex="203">
+			      	</div>
+                        </div>
+                      </div>
+		    
+		    	<div style="width:376px;margin: 3px 0 0 0;padding: 0 0 0 0;float: left;">
+	  	      <div style="width:100px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	    	        <span class="label" style="width:98px;height:18px;">Област</span>
+	      	      <span class="label" style="width:2px;height:18px;">&nbsp;</span>
+	        	</div>
+		        <div style="width:274px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	  	          <input id="region" name="region" class="ui-corner-all formInput" style="width:115px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Област на населеното място" disabled="true" tabindex="204"/>
+	  	          <div style="width:155px;margin: 0 0 0 0;padding: 0 0 0 0; float: right">
+	    	        	<span class="label" style="width:31px;height:18px;">Oбщ.</span>
+	      	      	<input id="municipality" name="municipality" class="ui-corner-all formInput" style="width:122px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: right;" title="Община на населеното място" disabled="true" tabindex="205">
+	      	    	</div>
+	        	</div>
+	    		</div>
+	    
+					<div style="width:376px;  margin: 3px 0 0 0; padding: 0 0 0 0; float: left;">
+						<div style="width:100px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	      			<span style="width:3px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+		        	<div class="ui-corner-all formInput" name="isOffice" title="Адрес на офис" id="isOffice" style="cursor:pointer;width: 16px;height: 16px; margin: 0 0 0 0; padding: 0 0 0 0;float:left">
+								<input style="border:none;cursor:pointer;width: 0px;height: 0px;margin: 0 0 0 0; padding: 0 0 0 0;
+									background: transparent;-webkit-box-shadow: none;-moz-box-shadow: none; box-shadow: none;color:transparent;outline: none;" 
+									name="isOfficeInput" title="Адрес на офис" id="isOfficeInput" type="image" tabindex="206">
+	          	</div>
+	         		<span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+	          	<span class="label" style="width:40px;height:18px;text-align:left;">Офис</span>
+		          <span class="label" style="width:35px;height:18px;">№</span>
+	  	        <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+						</div>
+						<div style="width:274px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	    		  	<input id="officeId" name="officeId" class="ui-corner-all formInput" style="width:31px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Номер на офис" disabled="true" tabindex="207"/>
+	        		<span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0;float: left;">&nbsp;</span>
+			        <input id="officeName" name="officeName" class="ui-corner-all formInput" style="width:237px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: right;overflow-y: scroll;" title="Име на офис" tabindex="208">
+	    			</div>
+					</div>
+	     
+					<div style="width:376px; margin: 3px 0 0 0;padding: 0 0 0 0; float: left;">
+	        	<div style="width:100px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	            <span style="width:3px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+	            <select id="quarterType" data-placeholder="" class="chosen formInput" style="margin: 0 0 0 0;padding: 0 0 0 0;diplay:block" title="Квартал/жилищен комплекс - тип" tabindex="209">
+	            </select>
+		        </div>
+	  	      <div style="width:274px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	    	        <input id="quarterName" class="ui-corner-all formInput fullInput" style="height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Име на квартал/жилищен комплекс" tabindex="210">
+	      	  </div>
+		     </div>
+	     
+	  	   <div style="width:376px; margin: 3px 0 0 0;padding: 0 0 0 0;float: left">
+	    	    <div style="width:100px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left">
+	          	<span style="width:3px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+	            <select id="streetType" data-placeholder="" class="chosen" style="margin: 0 0 0 0;padding: 0 0 0 0;diplay:block" title="Булевард/улица - тип" tabindex="211">
+	            </select>
+	      	  </div>
+						<div style="width:274px; margin: 0 0 0 0;padding: 0 0 0 0; float: left">
+	            <input id="streetName" class="ui-corner-all formInput" style="width:206px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Име на булевард/улица" tabindex="212">
+	            <div style="width:64px;margin: 0 0 0 0;padding: 0 0 0 0; float: right">
+		            <span class="label" style="width:15px;height:18px;">№</span>
+		            <input id="streetNo" class="ui-corner-all formInput" style="width:47px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: right;" title="Номер на улица" tabindex="213">
+	          	</div>
+	        	</div>
+	     	</div>
+		     
+	 	    <div style="width:376px;  margin: 3px 0 0 0;padding: 0 0 0 0; float: left;">
+	 	    	<div style="width:100px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left">
+	  				<span class="label" style="width:100px;height:18px;">Бл.</span>
+	  			</div>
+	  			<div style="width:274px;margin: 0 0 0 0;padding: 0 0 0 0; float: left;border:none">
+		        <input id="block" class="ui-corner-all formInput" style="width:114px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Номер/име на блок" tabindex="214">
+		        <span class="label" style="width:22px;height:22px;">Вх.</span>
+		        <input id="entranceNo" class="ui-corner-all formInput" style="width:30px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Вход" tabindex="215">
+		        <span class="label" style="width:20px;height:18px;">Ет.</span>
+		        <input id="floor" class="ui-corner-all formInput" style="width:30px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Етаж" tabindex="216">
+		        <div style="width:50px;margin: 0 0 0 0;padding: 0 0 0 0; float: right;border:none">
+			        <span class="label" style="width:20px;height:20px;">Ап.</span>
+			        <input id="apartmentNo" class="ui-corner-all formInput" style="width:28px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: right;" title="Номер на апартамент" tabindex="217">
+		      	</div>
+	      	</div>
+				</div>
+	     
+				<div style="width:376px; margin: 3px 0 0 0;padding: 0 0 0 0; float: left;">
+					<div style="width:100px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+						<span class="label" style="width:98px;height:18px;">Характ. обект</span>
+	          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+	        </div>
+	        <div style="width:274px;margin: 0 0 0 0;padding: 0 0 0 0; float: left">
+	         	<input id="commonObjectName" class="ui-corner-all formInput fullInput" style="height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Име на характерен обект" tabindex="218">
+	        </div>
+				</div>
+					
+				<div style="width:376px; margin: 3px 0 0 0;padding: 0 0 0 0; float: left;">
+					<div style="width:100px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+						<span class="label" style="width:98px;height:18px;">Уточнение</span>
+						<span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+					</div>
+					<div style="width:274px;margin: 0 0 0 0;padding: 0 0 0 0; float: left">
+						<input id="addressNote" class="ui-corner-all formInput fullInput" style="height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Допълнително уточнение" tabindex="219">
+					</div>
+				</div>
+	    
+				<div style="width:376px;height:2px;margin: 10px 0 10px 0;padding: 0 0 0 0;border:none;float:left;background-color:blue;">
+					&nbsp;
+				</div>
+	     
+				<div style="width:376px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+		     	<input id="clearButton" class="ui-corner-all formButton"  type="submit" value="Изчисти" style="width:100px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Изчистване на формата" tabindex="220">
+	  	   	<span style="width:176px;height:38px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+	    	 	<input id="validateButton" class="ui-corner-all formButton" type="submit" value="Валидация" style="width:100px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0;float: left;" title="Валидация на формата" tabindex="221">
+	    	</div>
+	    	<div style="width:376px; margin: 3px 0 0 0;padding: 0 0 0 0;float: left">
+	    		<span id="message" style="width:100%;height:18px;font-weight:bold;color:red;float:left;"></span>
+				</div>
+			</div>
+		</div>
+		<div style="margin-left:20px;width:460px">
+			<img src="logoSpeedy (220x50).PNG">
+		</div>
+	</div>
+
+                  
+                  
+                  
+                  
+	<div style="width:910px;float:left">
+		<div id="logTitle" style="width:100%;float: right;padding:0px;margin-left:20px;margin-top:0px;margin-bottom:5px;font-family: Verdana, Tahoma, Helvetica, sans-serif;font-size:12px;font-weight:bold;">
+			<span style="width:100%; margin: 0; padding: 0;">Състояние на променливите (Form Variables State)</span>
+		</div>
+	
+  	<div id="log" class="ui-widget ui-corner-all" style="width:900px;float: right;padding:20px 5px 10px 20px;margin-left:20px">
+  		<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+        	<span class="label" style="width:398px;">Нас. място - ID (Site ID):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left">
+	        <span id="varSiteId" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+        	<span class="label" style="width:398px;">Нас. място - тип (Site Type):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varSiteType" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+        	<span class="label" style="width:398px;">Нас. място - име (Site Name):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varSiteName" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+        	<span class="label" style="width:398px;">Нас. място - пощенски код (Post code):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varPostCode" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+        	<span class="label" style="width:398px;">Нас. място - област (Region):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varRegion" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+        	<span class="label" style="width:398px;">Нас. място - община (Municipality):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varMunicipality" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+        	<span class="label" style="width:398px;">Нас. място - номенклатура (Address nomenclature):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varAddrNomen" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+    
+
+			<div style="width:900px;margin: 15px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Офис ID (Office ID):</span>
+					<span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+				<div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span id="varOfficeId" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Офис - име (Office name):</span>
+					<span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+				<div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span id="varOfficeName" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Офис - раб. време (Office work time):</span>
+					<span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+				<div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span id="varOfficeWorkingTime" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Офис - съботно раб. време (Office Sat working day):</span>
+					<span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+				<div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span id="varOfficeWorkingTimeHalf" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+		
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Офис - пълен адрес (Office full address):</span>
+					<span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+				<div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span id="varOfficeFullAddressString" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+    
+    
+			<div style="width:900px;margin: 15px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Квартал/жк ID (Quarter ID):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varQuarterId" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Квартал/жк - тип (Quarter Type):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varQuarterType" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Квартал/жк - име (Quarter Name):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varQuarterName" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Квартал/жк - актуално име (Quarter Actual Name):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varQuarterActualName" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+     
+     
+			<div style="width:900px;margin: 15px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Улица ID (Street ID):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varStreetId" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Улица - тип (Street Type):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varStreetType" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Улица - име (Street Name):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varStreetName" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Улица - актуално име (Street Actual Name):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varStreetActualName" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Улица № (Street №):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varStreetNo" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+        	<span class="label" style="width:398px;">Блок (Block):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varBlock" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+    
+    	<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+        	<span class="label" style="width:398px;">Вход (entrance №):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varEntranceNo" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+    	<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+        	<span class="label" style="width:398px;">Етаж (floor):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varFloor" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+        	<span class="label" style="width:398px;">Апартамент (apartment №):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varApartmentNo" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 15px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Характ. обект - ID (Common Object ID):</span>
+					<span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+				<div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span id="varCommonObjectId" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+    
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Характ. обект - тип (Common Object Type):</span>
+					<span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+				<div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span id="varCommonObjectType" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">Характ. обект - име (Common Object Name):</span>
+					<span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+				<div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span id="varCommonObjectName" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+    
+			<div style="width:900px;margin: 30px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+        	<span class="label" style="width:398px;">Уточнение (Address Note):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+				</div>
+        <div style="width:500px;height:18px;margin: 0 0 0 0;padding: 0 0 0 0; float: left">
+	        <span id="varAddressNote" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+    	</div>
+    	
+    	<div style="width:900px;margin: 30px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">GPS X coordinate:</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varCoordX" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">GPS Y coordinate:</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varCoordY" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 5px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px;">GPS coordinates type:</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varCoordTypeId" style="color:black;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+			<div style="width:900px;margin: 15px 0 0 0;padding: 0 0 0 0;float: left;">
+      	<div style="width:400px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+					<span class="label" style="width:398px">Грешка (error exception):</span>
+          <span style="width:2px;height:18px;text-align:right; margin: 0 0 0 0;padding: 3 0 0 0; float:left">&nbsp;</span>
+        </div>
+        <div style="width:500px;height:18px; margin: 0 0 0 0;padding: 0 0 0 0; float: left;">
+	        <span id="varError" style="color:red;font-weight:bold;height:100%;margin: 0 0 0 0;padding: 3 0 0 0;float:left"></span>
+        </div>
+			</div>
+			
+  	</div>
+	</div>
+	</div>
+
+ 
+
+ 
+</form>
+</body>
+
+</html>
+

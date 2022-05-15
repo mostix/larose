@@ -1,0 +1,175 @@
+.ui-widget {
+	background: #ffeaab /*#FACF00*/;
+	font-family: Verdana, Tahoma, Helvetica, sans-serif;
+	font-size: 8pt;
+}
+
+.formInput, .ui-autocomplete, .ui-corner-top, 
+.chosen-single, .chosen-drop, .chosen-search input, .chosen-container-single .chosen-single,
+.chosen-container-active.chosen-with-drop .chosen-single,
+.checkedCombo, .uncheckedCombo {
+	background: white;
+	/*background-color: white;
+	background-repeat: inherit;
+	background-attachment: inherit;
+	background-position: inherit;*/
+}
+
+.ui-widget-content a, .formInput, .ui-autocomplete, .ui-corner-top, 
+.ui-state-hover, .ui-widget-content .ui-state-hover, .ui-state-focus, .ui-widget-content .ui-state-focus,
+.ui-widget-header,
+.chosen-single, .chosen-drop, .chosen-search input, .chosen-container-single .chosen-single,
+.chosen-container-active.chosen-with-drop .chosen-single,
+a.chosen-single {
+	color: black !important;
+}
+
+.formInput, .ui-widget, .ui-autocomplete, .ui-corner-top,
+.ui-state-hover, .ui-widget-content .ui-state-hover, .ui-state-focus, .ui-widget-content .ui-state-focus, 
+.chosen-single, .chosen-drop, .chosen-search input, .chosen-container-single .chosen-single,
+.chosen-container-active.chosen-with-drop .chosen-single {
+	border: 1px solid #A5501D !important;
+}
+
+.formInput:focus, .focusedElement, .chosen-container-active.chosen-container-single .chosen-single{
+	background-color: rgb(255,215,215) !important;
+	box-shadow: none;
+}
+
+.ui-widget.ui-button.ui-state-focus {
+-webkit-box-shadow: inset 0px -3px 2px rgba(215, 215, 215, 0.45), 0px 2px 2px rgba(215, 215, 215, 0.25);
+    -moz-box-shadow: inset 0px -3px 2px rgba(215, 215, 215, 0.45), 0px 2px 2px rgba(215, 215, 215, 0.25);
+    box-shadow: inset 0px -3px 2px rgba(215, 215, 215, 0.45), 0px 2px 2px rgba(215, 215, 215, 0.25);
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    text-shadow: 1px 1px 0px rgba(215, 215, 215, 0.5);
+}
+.formInput:disabled, .chosen-disabled .chosen-single, .disabledCombo {
+	background-color: rgb(240, 240, 240);
+	background-repeat: inherit;
+	background-attachment: inherit;
+	background-position: inherit;
+}
+
+
+.ui-state-hover, .ui-widget-content .ui-state-hover, .ui-state-focus, .ui-widget-content .ui-state-focus
+{
+    background: #FACF00 /*#ffd553*/;
+    cursor:default;
+}
+
+.ui-menu-item a {
+	/*color: #404040;*/
+	font-weight: bold;
+    font-size: 7pt;
+}
+
+.ui-widget-header {
+	border: none;
+	background: #dbeafc;
+	/*color: #404040;*/
+	cursor:default;
+	font-weight: bold;
+    font-size: 7pt;
+}
+
+.label {
+	color: blue;
+	text-align:right;
+	margin: 0 0 0 0;
+	padding: 3 0 0 0;
+	float:left;
+	height:100%;
+	font-weight:bold;
+}
+
+.ui-widget.ui-button {
+	background: blue !important;
+	color: white !important;
+	border: 1px solid blue !important;
+	font-weight: bold;
+}
+
+.ui-widget.ui-button:hover:enabled {
+	background: #FACF00 !important;
+	color: blue !important;
+	border: 1px solid #A5501D !important;
+	font-weight: bold;
+}
+
+.ui-widget.ui-button.ui-state-active {
+	background: yellow !important;
+}
+
+.ui-widget.ui-button.ui-state-disabled {
+	opacity: .30;
+	/*filter:Alpha(Opacity=20);*/
+	background-image: none;
+}
+
+.chosen-disabled {
+	opacity: 1 !important;
+}
+
+.ui-autocomplete {
+    max-height: 350px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+}
+
+
+/*
+.ui-autocomplete .ui-menu-item, .ui-autocomplete .ui-widget-header, .ui-autocomplete .ui-widget-header>div {
+  height: 18px;
+}
+*/
+
+
+.formInput, .ui-autocomplete, .ui-corner-top  {
+	text-indent: 1pt;
+}
+
+.uncheckedCombo {
+	background-image: none;
+	background-repeat: no-repeat;
+	background-position: 0 0;
+}
+
+.checkedCombo {
+	background-image: url(x14.png);
+	background-repeat: no-repeat;
+	background-position: 1px 1px;
+}
+
+.chosen-container {
+	height: 18px;
+	width: 95px;
+	font-size: 1em;
+	float: left;
+	display: block;
+}
+
+.chosen-container .chosen-drop {
+	width: 95px;
+}
+
+.chosen-container a.chosen-single {
+	height: 16px;
+	line-height: 16px;
+	height: 16px;
+	width: 85px;
+	font-weight:normal;
+	float: left;
+}
+
+.chosen-container span {
+	height: 16px;
+	font-family: Verdana,Arial,sans-serif;
+}
+
+.chosen-container-active.chosen-with-drop a.chosen-single div b, .chosen-container a.chosen-single div b {
+	background-position-x: 4px;
+	background-position-y: 0px;
+}
